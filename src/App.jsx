@@ -6,6 +6,7 @@ import Auth from './components/Auth';
 import FileUpload from './components/FileUpload';
 import FileList from './components/FileList';
 import ShareModal from './components/ShareModal';
+import PreviewModal from './components/PreviewModal';
 import PublicShareView from './components/PublicShareView';
 import ConfigGuide from './components/ConfigGuide';
 import { Upload } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function App() {
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sharingFile, setSharingFile] = useState(null);
+  const [previewFile, setPreviewFile] = useState(null);
   const [isWindowDragging, setIsWindowDragging] = useState(false);
 
   const fileUploadRef = useRef(null);
@@ -100,6 +102,7 @@ export default function App() {
       if (dbErr) throw dbErr;
 
       setFiles((prev) => prev.filter((f) => f.id !== file.id));
+      if (previewFile?.id === file.id) setPreviewFile(null);
     } catch (err) {
       console.error('Delete failed:', err);
       alert('Failed to delete: ' + err.message);
@@ -215,10 +218,23 @@ export default function App() {
           onShare={(file) => setSharingFile(file)}
           onDelete={handleDelete}
           onDownload={handleDownload}
+          onPreview={(file) => setPreviewFile(file)}
           onUploadClick={() => fileUploadRef.current?.openFileDialog()}
         />
 
       </main>
+
+      {/* Preview Modal Dialog */}
+      {previewFile && (
+        <PreviewModal
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+          onDownload={handleDownload}
+          onShare={(file) => {
+            setSharingFile(file);
+          }}
+        />
+      )}
 
       {/* Share Modal Dialog */}
       {sharingFile && (

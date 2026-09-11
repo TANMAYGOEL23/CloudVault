@@ -10,10 +10,10 @@ export default function FileList({
   onShare,
   onDelete,
   onDownload,
+  onPreview,
   searchQuery = '',
   onUploadClick
 }) {
-  // Choice 10A: Table view by default
   const [viewMode, setViewMode] = useState('list'); 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
@@ -160,7 +160,7 @@ export default function FileList({
         </div>
       )}
 
-      {/* File List Presentation (Table view default) */}
+      {/* File List Presentation */}
       {!loading && sortedFiles.length > 0 && (
         <>
           {viewMode === 'list' ? (
@@ -183,6 +183,7 @@ export default function FileList({
                       onShare={onShare}
                       onDelete={onDelete}
                       onDownload={onDownload}
+                      onPreview={onPreview}
                     />
                   ))}
                 </tbody>
@@ -197,6 +198,7 @@ export default function FileList({
                   onShare={onShare}
                   onDelete={onDelete}
                   onDownload={onDownload}
+                  onPreview={onPreview}
                 />
               ))}
             </div>

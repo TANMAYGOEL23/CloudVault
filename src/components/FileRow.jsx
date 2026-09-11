@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Download, Share2, Trash2, Loader2 } from 'lucide-react';
 import { formatBytes, formatDate, getFileIcon } from '../utils/formatters';
 
-export default function FileRow({ file, onShare, onDelete, onDownload }) {
+export default function FileRow({ file, onShare, onDelete, onDownload, onPreview }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleDownloadClick = async () => {
+  const handleDownloadClick = async (e) => {
+    e.stopPropagation();
     setIsDownloading(true);
     try {
       await onDownload(file);
@@ -15,7 +16,8 @@ export default function FileRow({ file, onShare, onDelete, onDownload }) {
     }
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = async (e) => {
+    e.stopPropagation();
     if (window.confirm(`Delete "${file.name}"?`)) {
       setIsDeleting(true);
       try {
@@ -26,16 +28,24 @@ export default function FileRow({ file, onShare, onDelete, onDownload }) {
     }
   };
 
+  const handleShareClick = (e) => {
+    e.stopPropagation();
+    onShare(file);
+  };
+
   return (
-    <tr className="border-b border-zinc-100 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition">
+    <tr 
+      onClick={() => onPreview && onPreview(file)}
+      className="border-b border-zinc-100 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition cursor-pointer group"
+    >
       {/* Name & Icon */}
       <td className="py-3 px-4">
         <div className="flex items-center space-x-3 min-w-0">
-          <div className="p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md flex-shrink-0">
+          <div className="p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md flex-shrink-0 group-hover:scale-105 transition">
             {getFileIcon(file.mime_type, file.name, "w-4 h-4")}
           </div>
           <div className="min-w-0 flex-1">
-            <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100 truncate block">
+            <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100 truncate block group-hover:underline">
               {file.name}
             </span>
             <span className="text-[10px] text-zinc-400 sm:hidden">
@@ -55,7 +65,7 @@ export default function FileRow({ file, onShare, onDelete, onDownload }) {
         {formatDate(file.created_at)}
       </td>
 
-      {/* Access Status (Choice 8A - Dot Badge) */}
+      {/* Access Status */}
       <td className="py-3 px-4 hidden lg:table-cell">
         {file.is_public ? (
           <span className="inline-flex items-center space-x-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
@@ -75,7 +85,7 @@ export default function FileRow({ file, onShare, onDelete, onDownload }) {
       <td className="py-3 px-4 text-right">
         <div className="flex items-center justify-end space-x-1">
           <button
-            onClick={() => onShare(file)}
+            onClick={handleShareClick}
             title="Share file"
             className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
           >

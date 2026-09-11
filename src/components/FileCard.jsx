@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Download, Share2, Trash2, Loader2 } from 'lucide-react';
+import { Download, Share2, Trash2, Loader2, Eye } from 'lucide-react';
 import { formatBytes, formatDate, getFileIcon, getFileCategory } from '../utils/formatters';
 import { supabase } from '../lib/supabaseClient';
 
-export default function FileCard({ file, onShare, onDelete, onDownload }) {
+export default function FileCard({ file, onShare, onDelete, onDownload, onPreview }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const isImage = getFileCategory(file.mime_type, file.name) === 'image';
@@ -12,7 +12,8 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
     .from('cloud_files')
     .getPublicUrl(file.storage_path);
 
-  const handleDownloadClick = async () => {
+  const handleDownloadClick = async (e) => {
+    e.stopPropagation();
     setIsDownloading(true);
     try {
       await onDownload(file);
@@ -21,7 +22,8 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
     }
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = async (e) => {
+    e.stopPropagation();
     if (window.confirm(`Delete "${file.name}"?`)) {
       setIsDeleting(true);
       try {
@@ -32,8 +34,16 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
     }
   };
 
+  const handleShareClick = (e) => {
+    e.stopPropagation();
+    onShare(file);
+  };
+
   return (
-    <div className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl p-3.5 transition shadow-subtle flex flex-col justify-between">
+    <div 
+      onClick={() => onPreview && onPreview(file)}
+      className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 rounded-xl p-3.5 transition shadow-subtle flex flex-col justify-between cursor-pointer"
+    >
       <div>
         {/* Top bar: Status dot & Actions */}
         <div className="flex items-center justify-between mb-2.5">
@@ -51,7 +61,7 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
 
           <div className="flex items-center space-x-1 opacity-60 group-hover:opacity-100 transition">
             <button
-              onClick={() => onShare(file)}
+              onClick={handleShareClick}
               title="Share file"
               className="p-1 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 rounded transition"
             >
@@ -69,16 +79,16 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
         </div>
 
         {/* Thumbnail or Icon box */}
-        <div className="w-full h-28 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-center overflow-hidden mb-3">
+        <div className="w-full h-28 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-center overflow-hidden mb-3 relative">
           {isImage ? (
             <img
               src={publicUrlData.publicUrl}
               alt={file.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           ) : (
-            <div className="p-3">
+            <div className="p-3 transform group-hover:scale-110 transition duration-200">
               {getFileIcon(file.mime_type, file.name, "w-8 h-8")}
             </div>
           )}
@@ -86,7 +96,7 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
 
         {/* File Name & Metadata */}
         <div>
-          <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate" title={file.name}>
+          <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate group-hover:underline" title={file.name}>
             {file.name}
           </h4>
           <div className="flex items-center justify-between mt-1 text-[11px] text-zinc-400">
@@ -96,10 +106,11 @@ export default function FileCard({ file, onShare, onDelete, onDownload }) {
         </div>
       </div>
 
-      {/* Download Action Footer */}
+      {/* Action Footer */}
       <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between">
-        <span className="text-[10px] text-zinc-400">
-          {file.download_count || 0} downloads
+        <span className="text-[10px] text-zinc-400 flex items-center space-x-1">
+          <Eye className="w-3 h-3" />
+          <span>Click to preview</span>
         </span>
         <button
           onClick={handleDownloadClick}
